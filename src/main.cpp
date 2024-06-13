@@ -86,8 +86,7 @@ int main() {
 
 	gladLoadGL();
 	// Draw in wireframe mode for now.
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
+	glEnable(GL_DEPTH_TEST);
 
 	// Inintialize scene objects.
 	auto myScene = triangle();
