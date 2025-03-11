@@ -12,7 +12,7 @@ endif()
 
 project ("Graphics")
 
-add_executable (Graphics "src/main.cpp"  "include/AssimpImport.h" "src/AssimpImport.cpp" "include/Mesh3D.h" "include/Object3D.h" "include/ShaderProgram.h"  "src/Mesh3D.cpp" "src/Object3D.cpp" "src/ShaderProgram.cpp" "include/StbImage.h" "src/StbImage.cpp")
+add_executable (Graphics "src/main.cpp" "include/ShaderProgram.h" "src/ShaderProgram.cpp" "include/StbImage.h" "src/StbImage.cpp")
 
 
 # Find and link external libraries, like SFML.
