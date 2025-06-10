@@ -241,7 +241,7 @@ int main() {
 	bool running{ true };
 	sf::Clock c;
 
-	auto last = c.getElapsedTime();
+	auto last{ c.getElapsedTime() };
 	while (running) {
 		// Check for events.
 		while (const std::optional event{ window.pollEvent() }) {
@@ -258,22 +258,21 @@ int main() {
 		std::cout << 1 / diff.asSeconds() << " FPS " << std::endl;
 #endif
 
-		// Set up the view and projection matrices.
-		glm::mat4 camera{ 
+		// Set up the model, view and projection matrices.
+		glm::mat4 model{
+			buildModelMatrix(objectPosition, objectOrientation, objectScale)
+		};
+		glm::mat4 camera{
 			glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(0, 0, -1), glm::vec3(0, 1, 0)) }
 		;
 		glm::mat4 perspective{
 			glm::perspective(glm::radians(45.0), static_cast<double>(window.getSize().x) / window.getSize().y, 0.1, 100.0)
 		};
+		program.setUniform("model", model);
 		program.setUniform("view", camera);
 		program.setUniform("projection", perspective);
 
-		// Adjust object position and rebuild model matrix.
-		glm::mat4 model{
-			buildModelMatrix(objectPosition, objectOrientation, objectScale)
-		};
-		program.setUniform("model", model);
-
+		// Draw!
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		drawMesh(obj);
 		window.display();
