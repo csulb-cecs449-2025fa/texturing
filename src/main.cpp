@@ -16,11 +16,20 @@ This application displays a textured mesh whose vertices also contain (u, v) tex
 #include "StbImage.h"
 #include "ShaderProgram.h"
 
-
+// A Mesh identifies a VAO on the GPU, the number of elements in its list of faces,
+// and a texture ID on the GPU.
 struct Mesh {
 	uint32_t vao;
 	uint32_t faces;
 	uint32_t texture;
+};
+
+// A SceneObject is a Mesh, assigned a position, orientation, and scale in world space.
+struct SceneObject {
+	Mesh mesh;
+	glm::vec3 position{ 0,0,0 };
+	glm::vec3 orientation{ 0,0,0 };
+	glm::vec3 scale{ 1, 1, 1 };
 };
 
 struct Vertex3D {
@@ -193,19 +202,31 @@ Mesh triangle() {
 Mesh bunny() {
 	// Load the bunny, but vertically flip its UV coordinates, because the creator uses 
 	// (0, 0) as the lower LEFT corner of texture space.
-	Mesh obj{ assimpLoad("models/bunny_textured.obj", true) };
+	Mesh obj{ assimpLoad("models/bunny/bunny_textured.obj", true) };
 	StbImage texture{};
-	texture.loadFromFile("models/bunny_textured.jpg");
+	texture.loadFromFile("models/bunny/bunny_textured.jpg");
 	obj.texture = generateTexture(texture);
 	return obj;
 }
 
+
+// TODO: write your own dragon() function, that constructs a Mesh reprenting the Stanford Dragon.
+// Following the example of bunny(), use assimp to load "scene.gltf" from the "models/dragon" folder.
+// The texture for the dragon is "DefaultMaterial_baseColor.jpeg" from the "models/dragon/textures" folder.
+// Then add the dragon to your scene alongside the bunny. The dragon is SIGNIFICANTLY larger in local space;
+// you will need to scale it down to approximately 1% its original size, and then adjust from there.
+/*
+Mesh dragon() {
+	...
+}
+*/
+
 glm::mat4 buildModelMatrix(const glm::vec3& position, const glm::vec3& orientation, const glm::vec3& scale) {
-	auto m{ glm::translate(glm::mat4(1), position) };
+	auto m{ glm::translate(glm::mat4{ 1 }, position) };
 	m = glm::scale(m, scale);
-	m = glm::rotate(m, orientation[2], glm::vec3(0, 0, 1));
-	m = glm::rotate(m, orientation[0], glm::vec3(1, 0, 0));
-	m = glm::rotate(m, orientation[1], glm::vec3(0, 1, 0));
+	m = glm::rotate(m, orientation[2], glm::vec3{ 0, 0, 1 });
+	m = glm::rotate(m, orientation[0], glm::vec3{ 1, 0, 0 });
+	m = glm::rotate(m, orientation[1], glm::vec3{ 0, 1, 0 });
 	return m;
 }
 
@@ -227,11 +248,12 @@ int main() {
 	glEnable(GL_DEPTH_TEST);
 
 	// Inintialize scene objects.
-	Mesh obj{ bunny() };
-	//Mesh obj = triangle();
-	glm::vec3 objectPosition{ 0, 0, -3 };
-	glm::vec3 objectOrientation{ 0, 0, 0 };
-	glm::vec3 objectScale{ 3, 3, 3 };
+	SceneObject bunnyObj{ 
+		bunny(), 
+		glm::vec3{0, 0, -3}, // position (0, 0, -3)
+		glm::vec3{0, 0, 0},  // no rotation
+		glm::vec3{3, 3, 3}   // scale x3
+	};
 
 	// Activate the shader program.
 	ShaderProgram program{ textureShader() };
@@ -260,12 +282,15 @@ int main() {
 
 		// Set up the model, view and projection matrices.
 		glm::mat4 model{
-			buildModelMatrix(objectPosition, objectOrientation, objectScale)
+			// position, orientation, scale.
+			buildModelMatrix(bunnyObj.position, bunnyObj.orientation, bunnyObj.scale)
 		};
 		glm::mat4 camera{
-			glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(0, 0, -1), glm::vec3(0, 1, 0)) }
-		;
+			// camera pos, look-at pos, up vector.
+			glm::lookAt(glm::vec3{0, 0, 0}, glm::vec3{0, 0, -1}, glm::vec3{0, 1, 0})
+		};
 		glm::mat4 perspective{
+			// fovy, aspect ratio, near plane, far plane.
 			glm::perspective(glm::radians(45.0), static_cast<double>(window.getSize().x) / window.getSize().y, 0.1, 100.0)
 		};
 		program.setUniform("model", model);
@@ -274,7 +299,7 @@ int main() {
 
 		// Draw!
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		drawMesh(obj);
+		drawMesh(bunnyObj.mesh);
 		window.display();
 	}
 
